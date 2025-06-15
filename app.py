@@ -1,5 +1,6 @@
 from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, ImageClip
 from moviepy.video.fx.MultiplySpeed import MultiplySpeed
+from wraptext import soft_wrap_text
 # ========== CẤU HÌNH ==========
 VIDEO_INPUT = "input_video.mp4"
 TEXT_INPUT = "input_text.txt"
@@ -11,7 +12,7 @@ BG_COLOR = (255, 206, 210)  # Màu nền cho text clip
 TEXT_COLOR = "black" 
 TEXT_GIA_TIEN = "Giá sản phẩm: 1.000.000 VNĐ"
 TEXT_CAM_ON = "Cảm ơn bạn đã xem!"
-CO_CHU = 50
+CO_CHU = 40
 # ========== TĂNG TỐC VIDEO ==========
 video = VideoFileClip(VIDEO_INPUT)
 # Nếu video dài hơn 80s thì mới cần tăng tốc
@@ -33,21 +34,33 @@ W, H = video.size
 text_y_pos = int(H * 1 / 8)
 
 for i, sentence in enumerate(texts):
+    # Áp dụng hàm soft wrap text
+    wrapped_text = soft_wrap_text(
+        text=sentence,
+        fontsize=CO_CHU,
+        letter_spacing=0,  # hoặc giá trị bạn muốn
+        font_family=FONT_PATH,
+        max_width=W - 150  # hoặc giới hạn mong muốn
+    )
+
     txt_clip = (
-        TextClip(text = sentence,
-                    font_size=CO_CHU, 
-                    color=TEXT_COLOR, 
-                    bg_color = BG_COLOR, 
-                    font=FONT_PATH,
-                    method='caption',
-                    size=(W - 200, None),        
-                    text_align='center',
-                    horizontal_align='center',
-                    margin=(25, 25))
+        TextClip(
+            text=wrapped_text,
+            font_size=CO_CHU,
+            color=TEXT_COLOR,
+            bg_color=BG_COLOR,
+            font=FONT_PATH,
+            method='caption',
+            size=(W - 150, None),
+            text_align='center',
+            horizontal_align='center',
+            margin=(25, 25)
+        )
         .with_position(("center", text_y_pos))
         .with_duration(text_duration - 1)
         .with_start(3 + i * text_duration)
     )
+
     text_clips.append(txt_clip)
 
 # ========== ẢNH SẢN PHẨM ĐẦU VIDEO ==========
@@ -67,32 +80,48 @@ product_img_clip_end = (
     .with_duration(10)
 )
 
-gia_tien = TextClip(
+wrapped_gia_tien = soft_wrap_text(
     text=TEXT_GIA_TIEN,
+    fontsize=CO_CHU,
+    letter_spacing=0,
+    font_family=FONT_PATH,
+    max_width=W - 150
+)
+
+gia_tien = TextClip(
+    text=wrapped_gia_tien,
     font=FONT_PATH,
     font_size=CO_CHU,
     color=TEXT_COLOR,
     bg_color=BG_COLOR,
     method='caption',
-    size=(W - 200, None),         # Chiều ngang video trừ 200px
+    size=(W - 150, None),
     text_align='center',
     horizontal_align='center',
-    margin=(25, 25)               # padding bên trong (nếu muốn thêm)
+    margin=(25, 25)
 ).with_position(("center", text_y_pos)).with_start(video.duration + 3).with_duration(5)
 
+# Áp dụng cho thanks_text
+wrapped_thanks_text = soft_wrap_text(
+    text=TEXT_CAM_ON,
+    fontsize=CO_CHU,
+    letter_spacing=0,
+    font_family=FONT_PATH,
+    max_width=W - 150
+)
 
 thanks_text = TextClip(
-    text=TEXT_CAM_ON,
+    text=wrapped_thanks_text,
     font=FONT_PATH,
     font_size=CO_CHU,
     color=TEXT_COLOR,
     bg_color=BG_COLOR,
     method='caption',
-    size=(W - 200, None),         # Chiều ngang video trừ 200px
+    size=(W - 150, None),
     text_align='center',
     horizontal_align='center',
-    margin=(25, 25)               # padding bên trong (nếu muốn thêm)
-).with_position(("center", text_y_pos)).with_start(video.duration + 3 +5).with_duration(5)
+    margin=(25, 25)
+).with_position(("center", text_y_pos)).with_start(video.duration + 3 + 5).with_duration(5)
 
 
 # ========== NHẠC NỀN ==========
